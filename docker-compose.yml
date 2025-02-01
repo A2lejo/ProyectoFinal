@@ -1,0 +1,136 @@
+services:
+  application1:
+    container_name: application1_pf
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MYSQL_HOST=db_master
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DB=db_informacion
+      - MYSQL_PORT=3306
+    networks:
+      - app-network
+    restart: always
+    ports:
+      - "5001:5000"
+
+  application2:
+    container_name: application2_pf
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MYSQL_HOST=db_master
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DB=db_informacion
+      - MYSQL_PORT=3306
+    networks:
+      - app-network
+    restart: always
+    ports:
+      - "5002:5000"    
+
+  application3:
+    container_name: application3_pf
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MYSQL_HOST=db_master
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DB=db_informacion
+      - MYSQL_PORT=3306
+    networks:
+      - app-network
+    restart: always
+    ports:
+      - "5003:5000"
+
+  db_master:
+    image: mysql:8.0
+    container_name: mysql_supermaestro1
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_informacion
+    ports:
+      - "3388:3306"
+    networks:
+      - app-network
+    volumes:
+      - db-master-data:/var/lib/mysql
+    restart: always
+    command: --server-id=1 --log-bin=mysql-bin --relay-log=mysql-relay-bin --binlog-do-db=db_informacion
+
+  db_slave:
+    image: mysql:8.0
+    container_name: mysql_esclavo1
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_informacion
+    ports:
+      - "3389:3306"
+    networks:
+      - app-network
+    depends_on:
+      - db_master
+    volumes:
+      - db-slave-data:/var/lib/mysql
+    restart: always
+    command: --server-id=2 --log-bin=mysql-bin --relay-log=mysql-relay-bin --binlog-do-db=db_informacion
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin11
+    environment:
+      PMA_HOST: db_master
+      PMA_ARBITRARY: 1
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+    depends_on:
+      - db_master
+    restart: always
+
+  nginx:
+    container_name: nginx_load_balancer
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "8061:80"
+    depends_on:
+      - application1
+      - application2
+      - application3
+    networks:
+      - app-network
+    restart: always
+
+  locust:
+    image: locustio/locust:latest
+    container_name: locust_pf
+    ports:
+      - "8089:8089"
+    volumes:
+      - C:\Users\LENOVO\Escritorio\Desarrollo de software\Quinto semestre\Aplicaciones distribuidas\ProyectoFinal:/mnt/locust
+    command: ["-f", "/mnt/locust/locustfile.py"]
+    depends_on:
+      - application1
+      - application2
+      - application3
+    networks:
+      - app-network
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-master-data:
+  db-slave-data:
