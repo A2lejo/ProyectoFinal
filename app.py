@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, make_response
 from flask_mysqldb import MySQL
 import config
 
@@ -41,7 +41,15 @@ def formulario():
         # Redirigir al formulario
         return redirect(url_for('formulario'))
 
-    return render_template('index.html')
+    response = make_response(render_template('index.html'))
+    response.headers['X-Server-Name'] = 'application1_pf'  # Cambia esto según el servidor
+    return response
+
+@app.route('/home')
+def home():
+    response = make_response(render_template('html.html'))
+    response.headers['X-Server-Name'] = 'application1_pf'  # Cambia esto según el servidor
+    return response
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)

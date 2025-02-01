@@ -120,9 +120,7 @@ services:
       - C:\Users\LENOVO\Escritorio\Desarrollo de software\Quinto semestre\Aplicaciones distribuidas\ProyectoFinal:/mnt/locust
     command: ["-f", "/mnt/locust/locustfile.py"]
     depends_on:
-      - application1
-      - application2
-      - application3
+      - nginx
     networks:
       - app-network
     restart: always
